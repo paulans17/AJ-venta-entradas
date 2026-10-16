@@ -27,3 +27,14 @@ https://script.google.com/macros/s/AKfycbyGrxD4qShn5nJFTSuZiYThs48wiWFvnExhZ9gPJ
 Ojo: en `appsscript.json` el acceso tiene que ser `ANYONE_ANONYMOUS`
 ("Cualquier usuario" en el editor). Con `ANYONE` pide iniciar sesión en
 Google y el `fetch()` de la PWA no funciona.
+
+## PWA (GitHub Pages)
+
+Repo: https://github.com/paulans17/AJ-venta-entradas (rama `main`, raíz).
+
+```
+https://paulans17.github.io/AJ-venta-entradas/
+```
+
+`CLAUDE.md` no se sube (está en `.gitignore`): lleva los IDs de las hojas,
+que ahora mismo se pueden abrir con el enlace.
