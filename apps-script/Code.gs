@@ -285,6 +285,53 @@ function _ordenarYRenumerar(shAsis, shConf) {
   return mapa;
 }
 
+/***** ======================= HOJA DE CONFIRMADOS ======================= *****/
+
+/**
+ * Crea (o rehace) la pestaña "confirmados" en la hoja del forms con
+ * Nombre | Carrera | Curso | Grupo de cada persona de confirmaciones,
+ * sacando los datos de su respuesta más reciente del forms. Por orden
+ * alfabético. Se ejecuta a mano desde el editor; se puede repetir.
+ */
+function crearHojaConfirmados() {
+  const ssForms = SpreadsheetApp.openById(PROPS.getProperty('ID_HOJA_FORMS'));
+
+  const sh = ssForms.getSheetByName(PESTANA_RESPUESTAS);
+  const datos = sh.getDataRange().getValues();
+  const cab = datos[0].map(function (c) { return String(c).trim(); });
+  const col = {
+    dni: cab.indexOf('DNI'),
+    carrera: cab.indexOf('¿Qué estudios universitarios cursa?'),
+    curso: cab.indexOf('¿En qué curso se encuentra?'),
+    grupo: cab.indexOf('¿En qué grupo se encuentra?'),
+  };
+  // DNI → respuesta más reciente (las filas van en orden de llegada)
+  const porDni = {};
+  for (let i = 1; i < datos.length; i++) porDni[normalizarDni(datos[i][col.dni])] = datos[i];
+
+  const shConf = ssForms.getSheetByName(PESTANA_CONFIRMACIONES);
+  const filas = [];
+  if (shConf && shConf.getLastRow() >= 2) {
+    shConf.getRange(2, 1, shConf.getLastRow() - 1, 3).getValues().forEach(function (r) {
+      const resp = porDni[normalizarDni(r[0])] || [];
+      filas.push([
+        String(r[2]).trim(),
+        String(resp[col.carrera] || '').trim(),
+        String(resp[col.curso] || '').trim(),
+        String(resp[col.grupo] || '').trim(),
+      ]);
+    });
+  }
+  filas.sort(function (a, b) { return a[0].localeCompare(b[0], 'es'); });
+
+  let destino = ssForms.getSheetByName('confirmados');
+  if (destino) destino.clear(); else destino = ssForms.insertSheet('confirmados');
+  destino.getRange(1, 1, 1, 4).setValues([['Nombre', 'Carrera', 'Curso', 'Grupo']]).setFontWeight('bold');
+  if (filas.length) destino.getRange(2, 1, filas.length, 4).setValues(filas);
+  destino.setFrozenRows(1);
+  Logger.log('Pestaña "confirmados" con ' + filas.length + ' personas');
+}
+
 /**
  * Crea el Google Forms de preinscripción y conecta sus respuestas a la
  * hoja "Preinscripcion XXII". Se ejecuta UNA SOLA VEZ desde el editor.
