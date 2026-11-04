@@ -388,6 +388,15 @@ function crearHojaCena() {
   destino.getRange(1, 1, 1, 4).setValues([['Nombre', 'Apellidos', 'Alergia', 'Menú']]).setFontWeight('bold');
   if (filas.length) destino.getRange(2, 1, filas.length, 4).setValues(filas);
   destino.setFrozenRows(1);
+
+  // Recuento de platos al lado (fórmulas: se actualiza si se edita a mano)
+  destino.getRange('F1').setFormula(
+    '=QUERY(A1:D, "select D, count(D) where D is not null group by D ' +
+    'order by count(D) desc label D \'Plato\', count(D) \'Nº\'", 1)');
+  destino.getRange('I1:I2').setValues([['Total cenas'], ['']]).setFontWeight('bold');
+  destino.getRange('I2').setFormula('=COUNTA(D2:D)');
+  destino.getRange('F1:G1').setFontWeight('bold');
+
   Logger.log('Pestaña "cena" con ' + filas.length + ' personas');
 }
 
