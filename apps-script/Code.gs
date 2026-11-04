@@ -335,7 +335,9 @@ function crearHojaConfirmados() {
 /**
  * Crea (o rehace) la pestaña "cena" en la hoja del forms con
  * Nombre | Apellidos | Alergia | Menú de los confirmados que van a la cena
- * (los que tienen menú en su respuesta más reciente del forms). Por orden
+ * (los que tienen menú en su respuesta más reciente del forms), más los
+ * miembros de Alfil (DNIs en la Script Property DNIS_ALFIL, separados por
+ * comas; no están en confirmaciones porque no pasan por la mesa). Por orden
  * alfabético de apellidos. Se ejecuta a mano desde el editor; se puede repetir.
  */
 function crearHojaCena() {
@@ -355,22 +357,30 @@ function crearHojaCena() {
   const porDni = {};
   for (let i = 1; i < datos.length; i++) porDni[normalizarDni(datos[i][col.dni])] = datos[i];
 
+  const dnis = [];
   const shConf = ssForms.getSheetByName(PESTANA_CONFIRMACIONES);
-  const filas = [];
   if (shConf && shConf.getLastRow() >= 2) {
-    shConf.getRange(2, 1, shConf.getLastRow() - 1, 1).getValues().forEach(function (r) {
-      const resp = porDni[normalizarDni(r[0])];
-      if (!resp) return;
-      const menu = String(resp[col.menu] || '').trim();
-      if (!menu) return; // solo curso, sin cena
-      filas.push([
-        String(resp[col.nombre]).trim(),
-        String(resp[col.apellidos]).trim(),
-        String(resp[col.alergia] || '').trim(),
-        menu,
-      ]);
-    });
+    shConf.getRange(2, 1, shConf.getLastRow() - 1, 1).getValues().forEach(function (r) { dnis.push(r[0]); });
   }
+  String(PROPS.getProperty('DNIS_ALFIL') || '').split(',').forEach(function (d) { dnis.push(d); });
+
+  const filas = [];
+  const vistos = {};
+  dnis.forEach(function (bruto) {
+    const dni = normalizarDni(bruto);
+    if (!dni || vistos[dni]) return;
+    vistos[dni] = true;
+    const resp = porDni[dni];
+    if (!resp) return;
+    const menu = String(resp[col.menu] || '').trim();
+    if (!menu) return; // solo curso, sin cena
+    filas.push([
+      String(resp[col.nombre]).trim(),
+      String(resp[col.apellidos]).trim(),
+      String(resp[col.alergia] || '').trim(),
+      menu,
+    ]);
+  });
   filas.sort(function (a, b) { return a[1].localeCompare(b[1], 'es') || a[0].localeCompare(b[0], 'es'); });
 
   let destino = ssForms.getSheetByName('cena');
