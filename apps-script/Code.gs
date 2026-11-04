@@ -389,10 +389,12 @@ function crearHojaCena() {
   if (filas.length) destino.getRange(2, 1, filas.length, 4).setValues(filas);
   destino.setFrozenRows(1);
 
-  // Recuento de platos al lado (fórmulas: se actualiza si se edita a mano)
+  // Recuento de platos al lado (fórmulas: se actualiza si se edita a mano).
+  // setFormula usa el separador del idioma de la hoja: ";" en español.
+  const sep = /^(en|ja|zh|ko|th|he|hi)/.test(ssForms.getSpreadsheetLocale()) ? ',' : ';';
   destino.getRange('F1').setFormula(
-    '=QUERY(A1:D, "select D, count(D) where D is not null group by D ' +
-    'order by count(D) desc label D \'Plato\', count(D) \'Nº\'", 1)');
+    '=QUERY(A1:D' + sep + ' "select D, count(D) where D is not null group by D ' +
+    'order by count(D) desc label D \'Plato\', count(D) \'Nº\'"' + sep + ' 1)');
   destino.getRange('I1:I2').setValues([['Total cenas'], ['']]).setFontWeight('bold');
   destino.getRange('I2').setFormula('=COUNTA(D2:D)');
   destino.getRange('F1:G1').setFontWeight('bold');
