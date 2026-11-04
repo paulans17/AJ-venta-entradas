@@ -333,6 +333,55 @@ function crearHojaConfirmados() {
 }
 
 /**
+ * Crea (o rehace) la pestaña "cena" en la hoja del forms con
+ * Nombre | Apellidos | Alergia | Menú de los confirmados que van a la cena
+ * (los que tienen menú en su respuesta más reciente del forms). Por orden
+ * alfabético de apellidos. Se ejecuta a mano desde el editor; se puede repetir.
+ */
+function crearHojaCena() {
+  const ssForms = SpreadsheetApp.openById(PROPS.getProperty('ID_HOJA_FORMS'));
+
+  const sh = ssForms.getSheetByName(PESTANA_RESPUESTAS);
+  const datos = sh.getDataRange().getValues();
+  const cab = datos[0].map(function (c) { return String(c).trim(); });
+  const col = {
+    dni: cab.indexOf('DNI'),
+    nombre: cab.indexOf('Nombre'),
+    apellidos: cab.indexOf('Apellidos'),
+    alergia: cab.indexOf('¿Posee alguna alergia o problema alimenticio?'),
+    menu: cab.indexOf('Seleccione menú'),
+  };
+  // DNI → respuesta más reciente (las filas van en orden de llegada)
+  const porDni = {};
+  for (let i = 1; i < datos.length; i++) porDni[normalizarDni(datos[i][col.dni])] = datos[i];
+
+  const shConf = ssForms.getSheetByName(PESTANA_CONFIRMACIONES);
+  const filas = [];
+  if (shConf && shConf.getLastRow() >= 2) {
+    shConf.getRange(2, 1, shConf.getLastRow() - 1, 1).getValues().forEach(function (r) {
+      const resp = porDni[normalizarDni(r[0])];
+      if (!resp) return;
+      const menu = String(resp[col.menu] || '').trim();
+      if (!menu) return; // solo curso, sin cena
+      filas.push([
+        String(resp[col.nombre]).trim(),
+        String(resp[col.apellidos]).trim(),
+        String(resp[col.alergia] || '').trim(),
+        menu,
+      ]);
+    });
+  }
+  filas.sort(function (a, b) { return a[1].localeCompare(b[1], 'es') || a[0].localeCompare(b[0], 'es'); });
+
+  let destino = ssForms.getSheetByName('cena');
+  if (destino) destino.clear(); else destino = ssForms.insertSheet('cena');
+  destino.getRange(1, 1, 1, 4).setValues([['Nombre', 'Apellidos', 'Alergia', 'Menú']]).setFontWeight('bold');
+  if (filas.length) destino.getRange(2, 1, filas.length, 4).setValues(filas);
+  destino.setFrozenRows(1);
+  Logger.log('Pestaña "cena" con ' + filas.length + ' personas');
+}
+
+/**
  * Crea el Google Forms de preinscripción y conecta sus respuestas a la
  * hoja "Preinscripcion XXII". Se ejecuta UNA SOLA VEZ desde el editor.
  * Sin onFormSubmit, sin correos, sin IDs ni QRs.
