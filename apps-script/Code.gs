@@ -1,8 +1,8 @@
 /**
  * AJ Venta Entradas XXII — proyecto de Apps Script standalone.
  *
- * Independiente del check-in de la app de staff (no se toca, D21 de
- * staff-ajapp-pwa). Abre las hojas por ID, que van en Script Properties:
+ * Independiente del check-in de la app de staff (no se toca).
+ * Abre las hojas por ID, que van en Script Properties:
  *   ID_HOJA_FORMS       → "Preinscripcion XXII"
  *   ID_HOJA_ASISTENTES  → hoja de asistentes de la app de staff
  */
@@ -211,7 +211,7 @@ function confirmar(dniBruto, staffBruto) {
     const ficha = _buscarEnForms(ssForms, dni);
     if (!ficha) return { encontrado: false };
 
-    // Plazas agotadas → no se confirma (decisión de Pau: bloquear, no avisar)
+    // Plazas agotadas → no se confirma (se bloquea, no solo se avisa)
     const plazas = Number(PROPS.getProperty('PLAZAS_MAX'));
     if (plazas > 0) {
       const shConf = ssForms.getSheetByName(PESTANA_CONFIRMACIONES);
@@ -242,7 +242,7 @@ function confirmar(dniBruto, staffBruto) {
     SpreadsheetApp.flush();
 
     // 5. Con la última plaza: ordenar asistentes por apellidos y renumerar
-    //    1, 2, 3... (decisión de Pau). Devuelve el número nuevo.
+    //    1, 2, 3... Devuelve el número nuevo.
     if (plazas > 0 && shConf.getLastRow() - 1 >= plazas) {
       const nuevos = _ordenarYRenumerar(shAsis, shConf);
       return { ok: true, numero: nuevos[String(numero)], nombre: ficha.nombre, renumerado: true };

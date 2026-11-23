@@ -4,7 +4,7 @@
    servidor para que no se repita).
    IMPORTANTE: sube el número de CACHE cada vez que cambie JS/CSS/HTML; si
    este archivo no cambia, los móviles se quedan con el código viejo (bug
-   real encontrado en la app de staff, D27). */
+   real encontrado en la app de staff). */
 const CACHE = 'venta-v3';
 const SHELL = [
   './',
